@@ -82,6 +82,8 @@ export function Step3Review({ onComplete }: Step3ReviewProps) {
 
     try {
       const verifiedToken = await getVerifiedRewardToken()
+      const countBefore = await questClient.getQuestCount()
+
       const result = await questClient.createQuest(
         address,
         step1Data.name,
@@ -104,11 +106,11 @@ export function Step3Review({ onComplete }: Step3ReviewProps) {
           const native = scValToNative(xdr.ScVal.fromXDR(result.resultXdr, "base64"))
           questId = Number(native)
         } catch {
-          // Fallback: try to get quest count
-          questId = (await questClient.getQuestCount()) - 1
+          // Fallback: use count captured before creation to avoid TOCTOU race
+          questId = countBefore
         }
       } else {
-        questId = (await questClient.getQuestCount()) - 1
+        questId = countBefore
       }
 
       setCreatedQuestId(questId)

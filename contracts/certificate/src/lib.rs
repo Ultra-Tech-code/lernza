@@ -92,6 +92,21 @@ impl CertificateContract {
     }
 
     #[only_owner]
+    /// Mint a completion certificate for a quest.
+    ///
+    /// # Arguments
+    /// * `quest_id` - ID of the completed quest
+    /// * `quest_name` - Name of the quest (for metadata)
+    /// * `quest_category` - Category of the quest (for metadata)
+    /// * `recipient` - Address receiving the certificate NFT
+    /// * `issuer` - Address issuing the certificate (e.g., quest owner or milestone contract)
+    ///
+    /// # Returns
+    /// The token ID of the minted certificate NFT
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `AlreadyIssued` - If recipient already has a certificate for this quest
     pub fn mint_certificate(
         env: Env,
         quest_id: u32,
@@ -177,6 +192,13 @@ impl CertificateContract {
         env.storage().persistent().get(&key).ok_or(Error::NotFound)
     }
 
+    /// Get all certificate token IDs issued to a user.
+    ///
+    /// # Arguments
+    /// * `user` - User address
+    ///
+    /// # Returns
+    /// Vec of token IDs for certificates owned by the user
     pub fn get_user_certificates(env: Env, user: Address) -> Vec<u32> {
         let key = DataKey::UserCertificates(user);
         env.storage()
@@ -185,6 +207,14 @@ impl CertificateContract {
             .unwrap_or(Vec::new(&env))
     }
 
+    /// Check if a user has a certificate for a specific quest.
+    ///
+    /// # Arguments
+    /// * `quest_id` - ID of the quest
+    /// * `recipient` - User address
+    ///
+    /// # Returns
+    /// true if user has already received a certificate for this quest
     pub fn has_quest_certificate(env: Env, quest_id: u32, recipient: Address) -> bool {
         let key = DataKey::QuestCertificate(quest_id, recipient);
         env.storage().persistent().has(&key)
@@ -202,6 +232,16 @@ impl CertificateContract {
         Self::internal_mint(&env, quest_id, quest_name, quest_category, recipient, owner)
     }
 
+    /// Get metadata and current owner of a certificate.
+    ///
+    /// # Arguments
+    /// * `token_id` - The certificate token ID
+    ///
+    /// # Returns
+    /// Tuple of (certificate metadata, current owner address)
+    ///
+    /// # Errors
+    /// * `NotFound` - If certificate does not exist
     pub fn get_certificate_details(
         env: Env,
         token_id: u32,
@@ -211,6 +251,13 @@ impl CertificateContract {
         Ok((metadata, owner))
     }
 
+    /// Get all certificates issued to a user with their metadata.
+    ///
+    /// # Arguments
+    /// * `user` - User address
+    ///
+    /// # Returns
+    /// Vec of (token_id, metadata) tuples for all certificates owned by user
     pub fn get_user_certificate_details(
         env: Env,
         user: Address,
@@ -229,6 +276,17 @@ impl CertificateContract {
         details
     }
 
+    /// Revoke a certificate NFT. Owner-only.
+    ///
+    /// # Arguments
+    /// * `token_id` - The certificate token ID to revoke
+    ///
+    /// # Auth Requirements
+    /// * Caller must be the contract owner
+    ///
+    /// # Errors
+    /// * `NotOwner` - If caller is not the contract owner
+    /// * `AlreadyRevoked` - If certificate is already revoked
     #[only_owner]
     pub fn revoke_certificate(env: Env, token_id: u32) -> Result<(), Error> {
         if env

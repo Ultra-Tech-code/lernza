@@ -154,6 +154,16 @@ impl RewardsContract {
     /// the quest contract address for ownership verification,
     /// the milestone contract address for completion verification,
     /// and the admin address for configuration updates.
+    /// Initialize the rewards contract with admin and cross-contract addresses.
+    ///
+    /// # Arguments
+    /// * `admin` - The address that will hold contract-administrator privileges; requires auth
+    /// * `token_addr` - Address of the SAC (Stellar Asset Contract) for reward distribution
+    /// * `quest_contract_addr` - Address of the quest contract for owner verification
+    /// * `milestone_contract_addr` - Address of the milestone contract for verification callbacks
+    ///
+    /// # Errors
+    /// * `AlreadyInitialized` - If contract is already initialized
     pub fn initialize(
         env: Env,
         admin: Address,
@@ -207,7 +217,24 @@ impl RewardsContract {
     }
 
     /// Fund a quest's reward pool. The funder becomes the quest authority.
+    ///
     /// Transfers tokens from the funder to this contract and credits the quest pool.
+    /// Verifies the funder is the quest owner via cross-contract call.
+    ///
+    /// # Arguments
+    /// * `funder` - Quest owner address; requires auth
+    /// * `quest_id` - ID of the quest to fund
+    /// * `amount` - Number of tokens to fund (must be positive and within bounds)
+    ///
+    /// # Auth Requirements
+    /// * `funder` must call `require_auth()`
+    /// * `funder` must be the quest owner
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `InvalidAmount` - If amount is non-positive or exceeds MAX_REWARD_AMOUNT
+    /// * `Unauthorized` - If funder is not the quest owner
+    /// * Other token transfer errors
     pub fn fund_quest(env: Env, funder: Address, quest_id: u32, amount: i128) -> Result<(), Error> {
         funder.require_auth();
 
@@ -472,8 +499,27 @@ impl RewardsContract {
     }
 
     /// Distribute reward tokens to an enrollee. Authority only.
+    ///
     /// Requires milestone completion verification before payment.
     /// Idempotent: a second call for the same (quest, milestone, enrollee) returns AlreadyPaid.
+    ///
+    /// # Arguments
+    /// * `caller` - Quest funder (authority); requires auth
+    /// * `quest_id` - ID of the quest
+    /// * `milestone_id` - ID of the completed milestone
+    /// * `enrollee` - Recipient address
+    /// * `amount` - Reward amount (should match verified milestone reward)
+    ///
+    /// # Auth Requirements
+    /// * `caller` must call `require_auth()`
+    /// * `caller` must be the quest funder
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `InvalidAmount` - If amount is non-positive or exceeds MAX_REWARD_AMOUNT
+    /// * `Unauthorized` - If caller is not the quest funder
+    /// * `AlreadyPaid` - If reward was already distributed for this combination
+    /// * Other token transfer errors
     pub fn distribute_reward(
         env: Env,
         caller: Address,

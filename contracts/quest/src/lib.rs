@@ -238,6 +238,13 @@ pub struct QuestContract;
 #[contractimpl]
 impl QuestContract {
     /// Initialize the quest contract with an admin.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban environment
+    /// * `admin` - The address that will hold contract-administrator privileges
+    ///
+    /// # Errors
+    /// * `Unauthorized` - If contract is already initialized
     pub fn initialize(env: Env, admin: Address) -> Result<(), Error> {
         admin.require_auth();
         if env.storage().instance().has(&DataKey::Admin) {
@@ -250,6 +257,9 @@ impl QuestContract {
     }
 
     /// Returns the address that holds the contract-administrator role.
+    ///
+    /// # Errors
+    /// * `NotFound` - If admin has not been initialized
     pub fn get_admin(env: Env) -> Result<Address, Error> {
         env.storage()
             .instance()
@@ -258,6 +268,14 @@ impl QuestContract {
     }
 
     /// Upgrade this contract's WASM. Only the stored administrator can invoke it.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban environment
+    /// * `admin` - Must match the stored admin address; requires auth
+    /// * `new_wasm_hash` - SHA-256 hash of the new WASM binary
+    ///
+    /// # Auth Requirements
+    /// * `admin` must call `require_auth()`
     pub fn upgrade(env: Env, admin: Address, new_wasm_hash: BytesN<32>) -> Result<(), Error> {
         Self::require_admin(&env, &admin)?;
         env.deployer().update_current_contract_wasm(new_wasm_hash);
@@ -428,6 +446,29 @@ impl QuestContract {
     }
 
     /// Create a new quest. Returns the quest ID.
+    ///
+    /// # Arguments
+    /// * `owner` - Quest owner address; requires auth
+    /// * `name` - Quest name (non-blank, max length enforced)
+    /// * `description` - Quest description (non-blank, max length enforced)
+    /// * `category` - Quest category for discovery
+    /// * `tags` - Optional tags (max 5, each max 32 chars)
+    /// * `token_addr` - Reward token contract address
+    /// * `visibility` - Public or Unlisted
+    /// * `max_enrollees` - Optional cap on enrollees (None for unlimited)
+    /// * `deadline` - Optional Unix timestamp deadline for enrollment
+    ///
+    /// # Returns
+    /// The auto-incremented quest ID
+    ///
+    /// # Auth Requirements
+    /// * `owner` must call `require_auth()`
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `InvalidInput` - If creator is not verified (for public quests)
+    /// * `NameTooLong` - If name exceeds max length
+    /// * `DescriptionTooLong` - If description exceeds max length
     #[allow(clippy::too_many_arguments)]
     pub fn create_quest(
         env: Env,

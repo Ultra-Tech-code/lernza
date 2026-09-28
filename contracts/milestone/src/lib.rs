@@ -404,6 +404,15 @@ pub struct MilestoneContract;
 impl MilestoneContract {
     /// Initialize the milestone contract with the quest contract address.
     /// Must be called once before any milestones can be created.
+    /// Initialize the milestone contract with an admin and cross-contract addresses.
+    ///
+    /// # Arguments
+    /// * `admin` - The address that will hold contract-administrator privileges; requires auth
+    /// * `quest_contract` - Address of the quest contract for cross-contract calls
+    /// * `certificate_contract` - Address of the certificate contract for NFT issuance
+    ///
+    /// # Errors
+    /// * `Unauthorized` - If contract is already initialized
     pub fn initialize(
         env: Env,
         admin: Address,
@@ -472,8 +481,32 @@ impl MilestoneContract {
     }
 
     /// Create a milestone for a quest. Owner auth required.
+    ///
     /// Validates ownership via cross-contract call to quest contract.
     /// Also validates that the quest has not expired (deadline check).
+    ///
+    /// # Arguments
+    /// * `owner` - Quest owner; requires auth
+    /// * `quest_id` - ID of the quest this milestone belongs to
+    /// * `title` - Milestone title (non-blank, max length enforced)
+    /// * `description` - Milestone description (non-blank, max length enforced)
+    /// * `reward_amount` - Token reward (must be within bounds)
+    /// * `requires_previous` - If true, learner must complete previous milestone first
+    /// * `difficulty` - Optional difficulty level indicator
+    /// * `estimated_duration` - Optional estimated completion time in minutes
+    /// * `prerequisites_knowledge` - Optional prerequisite knowledge description
+    ///
+    /// # Returns
+    /// The auto-incremented milestone ID for this quest
+    ///
+    /// # Auth Requirements
+    /// * `owner` must call `require_auth()`
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `NotFound` - If quest does not exist
+    /// * `Unauthorized` - If caller is not the quest owner
+    /// * `InvalidInput` - If title/description invalid or reward out of bounds
     pub fn create_milestone(
         env: Env,
         owner: Address,
@@ -572,7 +605,31 @@ impl MilestoneContract {
     }
 
     /// Create a milestone with zero or more prerequisite milestones.
+    ///
     /// Prerequisites must already exist in this quest, preventing cycles.
+    ///
+    /// # Arguments
+    /// * `owner` - Quest owner; requires auth
+    /// * `quest_id` - ID of the quest this milestone belongs to
+    /// * `title` - Milestone title (non-blank, max length enforced)
+    /// * `description` - Milestone description (non-blank, max length enforced)
+    /// * `reward_amount` - Token reward (must be within bounds)
+    /// * `prerequisites` - Vec of prerequisite milestone IDs (must all exist, no cycles)
+    /// * `difficulty` - Optional difficulty level indicator
+    /// * `estimated_duration` - Optional estimated completion time in minutes
+    /// * `prerequisites_knowledge` - Optional prerequisite knowledge description
+    ///
+    /// # Returns
+    /// The auto-incremented milestone ID for this quest
+    ///
+    /// # Auth Requirements
+    /// * `owner` must call `require_auth()`
+    ///
+    /// # Errors
+    /// * `Paused` - If contract is paused
+    /// * `NotFound` - If quest does not exist
+    /// * `Unauthorized` - If caller is not the quest owner
+    /// * `InvalidInput` - If prerequisites don't exist, reward out of bounds, or other validation fails
     pub fn create_milestone_with_prereqs(
         env: Env,
         owner: Address,

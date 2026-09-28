@@ -195,81 +195,121 @@ function App() {
     const page = state.page
     if (page === "quest" && state.questId !== null) {
       return (
-        <Suspense fallback={<PageSkeleton />}>
-          <QuestView questId={state.questId} onBack={() => handleNavigate("dashboard")} />
-        </Suspense>
+        <SectionErrorBoundary label="Quest View">
+          <Suspense fallback={<PageSkeleton />}>
+            <QuestView questId={state.questId} onBack={() => handleNavigate("dashboard")} />
+          </Suspense>
+        </SectionErrorBoundary>
       )
     }
 
     switch (page) {
       case "landing":
-        return <Landing onNavigate={handleNavigate} />
+        return (
+          <SectionErrorBoundary label="Landing">
+            <Landing onNavigate={handleNavigate} />
+          </SectionErrorBoundary>
+        )
       case "dashboard":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <Dashboard
-              onSelectQuest={handleSelectQuest}
-              onCreateQuest={() => handleNavigate("create-quest")}
-              onLaunchTutorial={() => onboarding.open(0)}
-            />
-          </Suspense>
+          <SectionErrorBoundary label="Dashboard">
+            <Suspense fallback={<PageSkeleton />}>
+              <Dashboard
+                onSelectQuest={handleSelectQuest}
+                onCreateQuest={() => handleNavigate("create-quest")}
+                onLaunchTutorial={() => onboarding.open(0)}
+              />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "create-quest":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <CreateQuest onBack={() => handleNavigate("dashboard")} />
-          </Suspense>
+          <SectionErrorBoundary label="Create Quest">
+            <Suspense fallback={<PageSkeleton />}>
+              <CreateQuest onBack={() => handleNavigate("dashboard")} />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "profile":
-        return <Profile />
+        return (
+          <SectionErrorBoundary label="Profile">
+            <Profile />
+          </SectionErrorBoundary>
+        )
       case "leaderboard":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <Leaderboard />
-          </Suspense>
+          <SectionErrorBoundary label="Leaderboard">
+            <Suspense fallback={<PageSkeleton />}>
+              <Leaderboard />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "history":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <History />
-          </Suspense>
+          <SectionErrorBoundary label="History">
+            <Suspense fallback={<PageSkeleton />}>
+              <History />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "analytics":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <AnalyticsPage />
-          </Suspense>
+          <SectionErrorBoundary label="Analytics">
+            <Suspense fallback={<PageSkeleton />}>
+              <AnalyticsPage />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "creator":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <CreatorProfile address={state.creatorAddress} />
-          </Suspense>
+          <SectionErrorBoundary label="Creator Profile">
+            <Suspense fallback={<PageSkeleton />}>
+              <CreatorProfile address={state.creatorAddress} />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "creator-dashboard":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <CreatorDashboard />
-          </Suspense>
+          <SectionErrorBoundary label="Creator Dashboard">
+            <Suspense fallback={<PageSkeleton />}>
+              <CreatorDashboard />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "certificate":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <CertificateView certificateId={state.certificateId ?? 0} />
-          </Suspense>
+          <SectionErrorBoundary label="Certificate View">
+            <Suspense fallback={<PageSkeleton />}>
+              <CertificateView certificateId={state.certificateId ?? 0} />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "notifications":
         return (
-          <Suspense fallback={<PageSkeleton />}>
-            <NotificationsPage onBack={() => handleNavigate("dashboard")} />
-          </Suspense>
+          <SectionErrorBoundary label="Notifications">
+            <Suspense fallback={<PageSkeleton />}>
+              <NotificationsPage onBack={() => handleNavigate("dashboard")} />
+            </Suspense>
+          </SectionErrorBoundary>
         )
       case "terms":
-        return <TermsOfService />
+        return (
+          <SectionErrorBoundary label="Terms of Service">
+            <TermsOfService />
+          </SectionErrorBoundary>
+        )
       case "privacy":
-        return <PrivacyPolicy />
+        return (
+          <SectionErrorBoundary label="Privacy Policy">
+            <PrivacyPolicy />
+          </SectionErrorBoundary>
+        )
       default:
-        return <NotFound onNavigate={handleNavigate} />
+        return (
+          <SectionErrorBoundary label="Not Found">
+            <NotFound onNavigate={handleNavigate} />
+          </SectionErrorBoundary>
+        )
     }
   }
 

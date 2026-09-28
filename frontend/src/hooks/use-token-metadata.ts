@@ -14,6 +14,7 @@ export function useTokenMetadata(tokenAddress?: string) {
         return client.getTokenMetadata()
       },
       enabled: Boolean(tokenAddress),
+      staleTime: Infinity,
     })
     queryData = query.data
     queryIsLoading = query.isLoading
